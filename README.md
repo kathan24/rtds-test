@@ -1,9 +1,13 @@
 # rtds-test
 
+## Prerequisites
+
+1. You will need the Envoy binary.
+
 ## Steps
 
 1. Clone this repo.
-2. Launch your Envoy proxy, pointing it to the config found in this repo. E.g. assuming your Envoy proxy executable, `envoy`, is located under `~/Downloads`, do:  
+2. Launch your Envoy proxy, pointing it to the config found in this repo. E.g. assuming your Envoy binary, `envoy`, is located under `~/Downloads`, do:  
 
 ```
 ~/Downloads/envoy -c $GOPATH/src/github.com/ivanhan/rtds-test/config/envoy.yaml --service-node node1 --service-cluster cluster1
