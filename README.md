@@ -19,5 +19,5 @@
 ```
 go run $GOPATH/src/github.com/ivanhan/rtds-test/main.go
 ```
-5. Navigate to http://localhost:1000 and refresh the page several times. Notice that 50% of the time, you will get an abort error.
-6. Navigate to http://localhost:1001/runtime to see the fault injection settings.
+5. Navigate to http://localhost:10000 and refresh the page several times. Notice that 50% of the time, you will get an abort error.
+6. Navigate to http://localhost:10001/runtime to see the fault injection settings.
