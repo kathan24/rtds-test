@@ -14,6 +14,7 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/server"
 	"github.com/envoyproxy/go-control-plane/pkg/test"
 	pstruct "github.com/golang/protobuf/ptypes/struct"
+	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 )
 
 var (
@@ -25,7 +26,18 @@ var (
 func init() {
 	flag.BoolVar(&debug, "debug", false, "Use debug logging")
 	flag.UintVar(&port, "port", 18000, "Management server port")
-	flag.StringVar(&nodeID, "nodeID", "node1", "Node ID")
+	flag.StringVar(&nodeID, "nodeID", "cluster2", "Node z")
+}
+
+// ClusterHash uses Cluster field as the node hash.
+type ClusterHash struct{}
+
+// This is an override method to use Cluster instead of a Node
+func (ClusterHash) ID(node *core.Node) string {
+	if node == nil {
+		return ""
+	}
+	return node.Cluster
 }
 
 func main() {
@@ -34,7 +46,8 @@ func main() {
 
 	signal := make(chan struct{})
 	cb := &callbacks{signal: signal}
-	config := cache.NewSnapshotCache(false, cache.IDHash{}, logger{})
+
+	config := cache.NewSnapshotCache(false, ClusterHash{}, logger{})
 	srv := server.NewServer(config, cb)
 
 	go test.RunManagementServer(ctx, srv, port)
@@ -57,21 +70,37 @@ func main() {
 				Fields: map[string]*pstruct.Value{
 					"fault.http.abort.abort_percent": &pstruct.Value{
 						Kind: &pstruct.Value_NumberValue{
-							NumberValue: 50,
+							NumberValue: 100,
+						},
+					},
+					"fault.http.abort.http_status": &pstruct.Value{
+						Kind: &pstruct.Value_NumberValue{
+							NumberValue: 404,
 						},
 					},
 				},
 			},
 		},
 	}
-
 	snapshot := cache.NewSnapshot("1", nil, nil, nil, nil, runtimes)
-
 	config.SetSnapshot(nodeID, snapshot)
 
-	log.Println("abort fault setting sent")
+	log.Println("Abort fault setting sent")
+	time.Sleep(10 * time.Second)
 
-	select {}
+	var runtimes1 = []cache.Resource{
+		&discovery.Runtime{
+			Name: "rtds",
+			Layer: &pstruct.Struct{
+				Fields: map[string]*pstruct.Value{
+				},
+			},
+		},
+	}
+
+	snapshot1 := cache.NewSnapshot("2", nil, nil, nil, nil, runtimes1)
+	config.SetSnapshot(nodeID, snapshot1)
+	log.Println("Clearing the fault")
 }
 
 type logger struct{}
